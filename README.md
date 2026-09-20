@@ -41,7 +41,7 @@ timeline
     title Linha do Tempo do Ponto Digital Maker
     V0 (Legado) : Raspberry Pi com Linux : Acesso via pinctrl : Manutenção complexa e lenta
     V1 (Transição) : 1x NodeMCU ESP8266 : Apenas Biometria AS608 : LCD 16x2 com fantasmas : Travamentos periódicos do sensor
-    V2 (Atual) : Desenvolvido por Victor Augusto : Arquitetura Master-Slave (2x ESP8266) : Biometria + RFID PN532 : LCD 20x4 Alinhado : Watchdog de Sensor : Fila Offline LittleFS : Cloud Google Sheets
+    V2 (Atual) : Arquitetura Master-Slave (2x ESP8266) : Biometria + RFID PN532 : LCD 20x4 Alinhado : Watchdog de Sensor : Fila Offline LittleFS : Cloud Google Sheets
 ```
 
 ### 🔹 V0 — A Prova de Conceito Inicial (Raspberry Pi)
