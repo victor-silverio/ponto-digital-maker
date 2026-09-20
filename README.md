@@ -37,11 +37,10 @@ Todo o hardware utilizado neste projeto pertence ao patrimônio do **MakerSpace 
 ## 📜 Histórico de Engenharia: A Evolução (V0 ➔ V1 ➔ V2)
 
 ```mermaid
-timeline
-    title Linha do Tempo do Ponto Digital Maker
-    V0 (Legado) : Raspberry Pi com Linux : Acesso via pinctrl : Manutenção complexa e lenta
-    V1 (Transição) : 1x NodeMCU ESP8266 : Apenas Biometria AS608 : LCD 16x2 com fantasmas : Travamentos periódicos do sensor
-    V2 (Atual) : Arquitetura Master-Slave (2x ESP8266) : Biometria + RFID PN532 : LCD 20x4 Alinhado : Watchdog de Sensor : Fila Offline LittleFS : Cloud Google Sheets
+flowchart LR
+    V0["<b>V0 (Legado)</b><br>Raspberry Pi (Linux)<br>Acesso via pinctrl<br>Manutenção complexa"]
+    --> V1["<b>V1 (Transição)</b><br>1x NodeMCU ESP8266<br>Apenas Biometria AS608<br>LCD 16x2 com fantasmas<br>Travamentos do sensor"]
+    --> V2["<b>V2 (Atual)</b><br>Master-Slave (2x ESP8266)<br>Biometria + RFID PN532<br>LCD 20x4 Alinhado<br>Watchdog + LittleFS Offline<br>Google Sheets Cloud"]
 ```
 
 ### 🔹 V0 — A Prova de Conceito Inicial (Raspberry Pi)
@@ -78,21 +77,21 @@ Desenvolvida por **Victor Augusto** (membro da Área de Projetos do MakerSpace),
 
 ```mermaid
 flowchart TD
-    subgraph SlaveNode ["NodeMCU #2 (Slave - Periféricos)"]
-        PN532["Módulo NFC/RFID PN532 (SPI)"] -->|Leitura UID| ESP_SLAVE["ESP8266 Slave"]
-        ESP_SLAVE -->|Chaveamento| RGB["LED RGB (Catodo Comum)"]
+    subgraph SlaveNode ["NodeMCU #2 (Slave - Coprocessador Periférico)"]
+        PN532["Módulo NFC/RFID PN532 (SPI)"] -->|"Leitura UID"| ESP_SLAVE["ESP8266 Slave"]
+        ESP_SLAVE -->|"Chaveamento"| RGB["LED RGB (Catodo Comum)"]
     end
 
     subgraph MasterNode ["NodeMCU #1 (Master - Cérebro Central)"]
         ESP_MASTER["ESP8266 Master"]
-        AS608["Sensor Biométrico AS608 (UART 57600)"] <--> ESP_MASTER
-        ESP_MASTER -->|I2C| LCD["Display LCD 20x4"]
-        ESP_MASTER -->|GPIO15| BUZZER["Buzzer Sonoro"]
-        ESP_MASTER -->|Flash FS| LFS["LittleFS (Banco Local)"]
+        AS608["Sensor Biométrico AS608"] <-->|"UART 57600"| ESP_MASTER
+        ESP_MASTER -->|"I2C"| LCD["Display LCD 20x4"]
+        ESP_MASTER -->|"GPIO15"| BUZZER["Buzzer Sonoro"]
+        ESP_MASTER -->|"Flash FS"| LFS["LittleFS (Banco Local)"]
     end
 
-    ESP_SLAVE <==>|UART 9600 baud (Handshake / ACK)| ESP_MASTER
-    ESP_MASTER -->|HTTPS REST| CLOUD["Google Sheets WebApp"]
+    ESP_SLAVE <-->|"UART 9600 baud (Handshake / ACK)"| ESP_MASTER
+    ESP_MASTER -->|"HTTPS REST"| CLOUD["Google Sheets WebApp"]
 ```
 
 ---
