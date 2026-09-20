@@ -36,29 +36,33 @@ Todo o hardware utilizado neste projeto pertence ao patrimônio do **MakerSpace 
 
 ## 📜 Histórico de Engenharia: A Evolução (V0 ➔ V1 ➔ V2)
 
+> [!NOTE]
+> **Continuidade do Projeto:** Todas as versões da história do sistema sempre contaram com **sensor biométrico óptico, display LCD e envio de batidas para a planilha Google Sheets**. A evolução focou em confiabilidade, ergonomia audiovisual e eliminação de gargalos físicos.
+
 ```mermaid
 flowchart LR
-    V0["<b>V0 (Legado)</b><br>Raspberry Pi (Linux)<br>Acesso via pinctrl<br>Manutenção complexa"]
-    --> V1["<b>V1 (Transição)</b><br>1x NodeMCU ESP8266<br>Apenas Biometria AS608<br>LCD 16x2 com fantasmas<br>Travamentos do sensor"]
-    --> V2["<b>V2 (Atual)</b><br>Master-Slave (2x ESP8266)<br>Biometria + RFID PN532<br>LCD 20x4 Alinhado<br>Watchdog + LittleFS Offline<br>Google Sheets Cloud"]
+    V0["<b>V0 (Legado)</b><br>Raspberry Pi (Linux)<br>Biometria + LCD 16x2<br>Google Sheets via scripts<br>Manutenção complexa"]
+    --> V1["<b>V1 (Base do Firmware)</b><br>Por Nicolae Maximus<br>1x NodeMCU ESP8266<br>Biometria + LCD 20x4<br>Config. residual 16x2<br>Travamentos do sensor"]
+    --> V2["<b>V2 (Engenharia Atual)</b><br>Por Victor Augusto<br>Base 100% no código V1<br>Master-Slave (2x ESP8266)<br>Biometria + RFID PN532<br>Watchdog + LCD Alinhado<br>Fila LittleFS + Google Sheets"]
 ```
 
 ### 🔹 V0 — A Prova de Conceito Inicial (Raspberry Pi)
 * O protótipo primitivo era executado sobre um computador de placa única **Raspberry Pi** rodando Linux.
-* As interfaces de hardware eram manipuladas via utilitários do sistema como `pinctrl` e scripts de automação.
+* Integrava sensor biométrico, display **LCD 16x2** e scripts em Python/Bash com `pinctrl` que comunicavam e enviavam batidas para a planilha Google Sheets.
 * **Limitações:** Manutenção difícil e pesada para um dispositivo de bancada que precisava ficar ligado 24/7; tempo de inicialização lento em quedas de energia e suscetibilidade à corrupção de cartão SD.
 
-### 🔹 V1 — A Migração para Microcontrolador (Monolítico)
-* Desenvolvida por membros anteriores da equipe, migrou o sistema para um microcontrolador dedicado: **1x NodeMCU ESP8266**.
-* Contava apenas com o sensor biométrico AS608 e display LCD.
+### 🔹 V1 — A Migração para Microcontrolador (Desenvolvida por Nicolae Maximus)
+* Desenvolvida por **Nicolae Maximus T. N. Lopes**, migrou a arquitetura para um microcontrolador dedicado: **1x NodeMCU ESP8266**.
+* Esta versão estabeleceu os alicerces fundamentais do firmware (leitura biométrica AS608, conexão Wi-Fi e requisições HTTP para a planilha), servindo como **base integral (100%)** para o projeto subsequente.
+* Já adotava fisicamente o display **LCD 20x4**, porém mantinha configurações e rotinas residuais de 16x2 herdadas da V0, gerando corte de mensagens e sobreposição de caracteres fantasmas.
 * **Problemas Críticos Identificados:**
-  * **Congelamento do Leitor Óptico:** O sensor AS608 travava a cada poucas horas de uso contínuo, exigindo que alguém puxasse o cabo da tomada para reiniciar fisicamente a placa.
-  * **Display LCD Desconfigurado:** O display físico era um **20x4**, mas o firmware estava configurado para **16x2**, cortando mensagens pela metade e gerando caracteres "fantasmas" sobrepostos.
+  * **Congelamento do Sensor Biométrico:** O sensor AS608 travava a cada poucas horas de operação contínua por ruídos no barramento serial, exigindo puxar o cabo da tomada para reiniciar fisicamente a placa.
+  * **Subutilização do Display:** O display de 4 linhas operava como se tivesse apenas 2, desperdiçando metade da área visual útil.
   * **Leitura Biométrica Lenta:** Ausência de feedback de processamento e lentidão em laços seriais bloqueantes (`while(!Serial.available())`).
-  * **Falta de Feedback Sensorial:** Sem avisos sonoros ou luminosos, o usuário ficava na dúvida se o ponto havia sido computado.
+  * **Falta de Feedback Sensorial:** Sem buzzer ou sinalização luminosa dedicada, o integrante dependia de olhar fixamente para a tela para confirmar o registro.
 
-### 🔹 V2 — A Versão Definitiva de Engenharia (Atual)
-Desenvolvida por **Victor Augusto** (membro da Área de Projetos do MakerSpace), a **Versão 2.0** consistiu em uma reformulação arquitetural e de código completa:
+### 🔹 V2 — A Versão Definitiva de Engenharia (Desenvolvida por Victor Augusto)
+Desenvolvida por **Victor Augusto** (membro da Área de Projetos do MakerSpace), tomando o código de **Nicolae Maximus** como base direta e adicionando novas camadas de resiliência e hardware:
 1. **Watchdog Preventivo do Sensor Biométrico:** Algoritmo que monitora falhas de comunicação com o AS608. Ao detectar anomalias ou a cada 2 horas preventivas, envia uma sequência binária de soft-reset direto para o DSP do sensor via UART, restaurando a leitura sem reiniciar o microcontrolador.
 2. **Engenharia de Texto no LCD 20x4:** Redesenho completo do driver de texto com funções matemáticas de centralização geométrica (`formatarCentro`), preenchimento de buffer (`formatarLinha`) e exibição de relógio em tempo real via NTP com precisão de segundos.
 3. **Identificação Híbrida com NFC/RFID (PN532 V3 SPI):** Implementação de leitor de cartões e chaveiros Mifare (13.56 MHz) em barramento SPI de alta velocidade, permitindo batidas de ponto instantâneas.
@@ -178,8 +182,9 @@ B - RESTAURAR nomes de backup (Integrantes)
 
 ## 👨‍💻 Autoria e Créditos
 
-* **Desenvolvimento da V2.0:** [Victor Augusto](https://github.com/victor-silverio) — Membro da Área de Projetos do **MakerSpace UNIFEI**.
-* **Versões Anteriores (V0 / V1):** Membros precursores do projeto MakerSpace UNIFEI.
+* **Desenvolvimento da V2.0:** [Victor Augusto](https://github.com/victor-silverio) — Membro da Área de Projetos do **MakerSpace UNIFEI** (Refatoração de arquitetura Master-Slave, integração RFID SPI, watchdog de hardware, interface audiovisual e expansão de confiabilidade).
+* **Desenvolvimento da V1.0 (Base Arquitetural):** **Nicolae Maximus T. N. Lopes** — Desenvolvedor pioneiro da versão em microcontrolador NodeMCU ESP8266, cujo código serviu de alicerce e base 100% para o desenvolvimento da V2.
+* **Versão V0.0 (Legado Raspberry Pi):** Membros precursores do projeto MakerSpace UNIFEI.
 * **Propriedade do Hardware:** [MakerSpace UNIFEI](https://www.instagram.com/makerspaceunifei/) — Universidade Federal de Itajubá.
 
 ---

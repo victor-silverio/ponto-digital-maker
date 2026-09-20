@@ -6,21 +6,23 @@
 
 ## 1. Resumo Executivo da Evolução
 
-A versão original do sistema (**V1.0**, baseada no arquivo `original.txt`) consistia em um protótipo monolítico implementado sobre uma única placa NodeMCU ESP8266. Apesar de funcional para batidas simples de digital, a V1 apresentava limitações críticas de confiabilidade operacional para uso contínuo em laboratório: tela pequena (16x2) com caracteres fantasmas, dependência exclusiva de biometria, travamentos por laços seriais infinitos, perda de sincronia horária ao longo dos dias, ausência de feedback sonoro e impossibilidade de reconexão de Wi-Fi sem reiniciar a placa fisicamente.
+A versão original do sistema em microcontrolador (**V1.0**, desenvolvida por **Nicolae Maximus T. N. Lopes**) consistia em um protótipo monolítico implementado sobre uma única placa NodeMCU ESP8266. A V1 foi um marco crucial ao migrar a lógica do antigo protótipo em Raspberry Pi (V0) para um microcontrolador dedicado, estabelecendo a comunicação com o sensor biométrico AS608 e o envio direto para o Google Sheets. Essa estrutura serviu como **base integral (100%)** para o projeto subsequente.
 
-A **Versão 2.0 (V2.0)** representou um redesenho arquitetural completo. O sistema foi transformado em uma **arquitetura distribuída Master-Slave com dois microcontroladores**, integrando tecnologia **RFID/NFC de alta velocidade**, display **LCD 20x4 profissional**, sinalização audiovisual inteligente (**Buzzer + LED RGB**), **watchdog de auto-recuperação de hardware** e salvaguarda de dados locais.
+Contudo, a operação diária no laboratório revelou desafios para um funcionamento ininterrupto 24/7: o display físico de 20x4 operava com rotinas lógicas residuais de 16x2 herdadas da V0 (gerando sobreposição de caracteres fantasmas e mensagens cortadas), o sensor AS608 congelava a cada poucas horas por ruídos de buffer serial, não havia feedback sonoro/luminoso e laços seriais bloqueantes causavam travamentos.
+
+A **Versão 2.0 (V2.0)**, desenvolvida por **Victor Augusto**, tomou o código da V1 como base integral e implementou um redesenho de engenharia completo. O sistema foi transformado em uma **arquitetura distribuída Master-Slave com dois microcontroladores**, integrando tecnologia **RFID/NFC de alta velocidade**, aproveitamento pleno do display **LCD 20x4**, sinalização audiovisual inteligente (**Buzzer + LED RGB**), **watchdog com auto-recuperação do AS608 via soft-reset** e salvaguarda de dados locais em LittleFS com fila offline.
 
 ---
 
 ## 2. Quadro Comparativo Direto (Métricas V1 vs V2)
 
-| Parâmetro de Engenharia | Versão 1.0 (Original) | Versão 2.0 (Atual) | Impacto Prático |
+| Parâmetro de Engenharia | Versão 1.0 (Original - Nicolae) | Versão 2.0 (Atual - Victor) | Impacto Prático |
 |---|:---:|:---:|---|
 | **Volume de Código Total** | 975 linhas (1 arquivo) | **1.998 linhas** (2 firmwares) | +105% de funcionalidades e proteções |
 | **Arquitetura de Hardware** | 1x NodeMCU ESP8266 | **2x NodeMCU (Master + Slave)** | Elimina gargalos de tempo real e falta de pinos |
 | **Métodos de Identificação** | Apenas Biometria Óptica | **Biometria Óptica + RFID/NFC** | Maior flexibilidade e velocidade de acesso |
-| **Display LCD** | 16 colunas x 2 linhas | **20 colunas x 4 linhas** | +150% de área útil de texto com relógio e data |
-| **Tratamento de Strings LCD**| Escrita direta (gerava fantasmas)| **Alinhador e Centralizador (20 chars)**| Telas limpas, sem caracteres sobrepostos |
+| **Display LCD** | Módulo 20x4 operado como 16x2 | **20 colunas x 4 linhas pleno** | +150% de área útil de texto com relógio e data |
+| **Tratamento de Strings LCD**| Rotinas herdadas 16x2 (fantasmas)| **Alinhador e Centralizador (20 chars)**| Telas limpas, sem caracteres sobrepostos |
 | **Feedback Sonoro** | Inexistente | **Buzzer ativo (D8 Master)** | Tons diferentes para Entrada, Saída e Erro |
 | **Feedback Luminoso** | Apenas LED onboard azul | **LED RGB de Alta Visibilidade** | Pulso azul (idle), verde (OK) e vermelho (erro)|
 | **Comunicação Interplacas** | Inexistente | **UART com Handshake e ACK** | Auditoria total no monitor serial do PC |
@@ -45,8 +47,8 @@ Na V1, todos os periféricos disputavam o único processador do ESP8266 e seu ba
 * Na V2, o leitor PN532 V3 foi integrado em modo **SPI nativo** na placa Slave. O banco de dados da Master ganhou o arquivo `/cartoes.txt` no LittleFS, vinculando o UID hexadecimal de 4 a 7 bytes a um número de ID de membro (`UID;ID`). A aproximação de um cartão é processada e enviada para a nuvem com a mesma prioridade da digital.
 
 ### Inovação 3: Expansão e Engenharia de Texto do Display LCD 20x4
-* Na V1, a tela era de 16x2. Ao tentar exibir strings variáveis, caracteres antigos permaneciam no fundo ("fantasmas").
-* Na V2, o LCD foi migrado para **20x4**. Foram criadas três funções fundamentais:
+* Na V1, embora o display físico já fosse o módulo LCD 20x4, o firmware herdava a lógica e dimensões do antigo protótipo de 16x2 da V0. Ao exibir strings de tamanhos variáveis, caracteres antigos permaneciam no fundo ("fantasmas") e metade do display ficava subutilizada.
+* Na V2, o LCD 20x4 passou a ser operado em sua plenitude geométrica. Foram criadas três funções fundamentais:
   * `formatarLinha(s, largura)`: Completa com espaços até exatamente 20 caracteres ou trunca se maior.
   * `formatarCentro(s, largura)`: Calcula o padding matemático para centralização perfeita de títulos.
   * `getLinhaDataHora()`: Mantém a Linha 0 com data e hora atualizadas a cada segundo sem piscar o LCD (*clear-less update*).
