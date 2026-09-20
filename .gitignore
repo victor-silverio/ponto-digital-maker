@@ -1,0 +1,23 @@
+# Compilação e Binários Arduino / ESP
+build/
+*.bin
+*.hex
+*.elf
+*.eep
+
+# IDEs e Editores
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Arquivos de Sistema Operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Arquivos de configuração local com credenciais reais (se usados)
+*.local.h
+credentials.h
+secrets.h
